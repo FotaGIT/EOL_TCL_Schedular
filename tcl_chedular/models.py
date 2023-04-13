@@ -21,6 +21,7 @@ class CorePurchaseaddon(models.Model):
     subscriptiontype = models.CharField(db_column='subscriptionType', max_length=500, blank=True, null=True)  # Field name made lowercase.
     startdate = models.CharField(db_column='startDate', max_length=500, blank=True, null=True)  # Field name made lowercase.
     expirationdate = models.CharField(db_column='expirationDate', max_length=500, blank=True, null=True)  # Field name made lowercase.
+    is_transfer = models.BooleanField(default=False)
 
     class Meta:
         managed = False
