@@ -1,5 +1,5 @@
 """
-TCU = Project
+TCU = scheduler
 """
 import datetime
 import json
@@ -21,7 +21,6 @@ for i in purchase_obj:
     ID = i.pop("id")
     created_on = i.pop("created_on")
     modified_on = i.pop("modified_on")
-
 
 
 
