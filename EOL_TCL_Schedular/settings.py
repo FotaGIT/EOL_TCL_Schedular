@@ -92,7 +92,6 @@ DATABASES = {
         'NAME': "tcldb",
         'USER': "postgres",
         'PASSWORD': "root",
-        # 'HOST': "172.31.10.154",
         'PORT': '5433',
     },
 }
