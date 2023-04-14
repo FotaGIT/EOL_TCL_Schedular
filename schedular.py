@@ -23,30 +23,27 @@ import logging.handlers
 
 TCL_handler = RotatingFileHandler('TCL_schedular_logs.log', mode='a', maxBytes=5 * 1024 * 1024, backupCount=2, encoding=None, delay=0)
 
-
-
 timestamp = datetime.datetime.now(timezone("Asia/Kolkata")).strftime('%Y-%m-%d %H:%M:%S %p')
 
-logging.basicConfig(
+logger = logging.basicConfig(
     # filename='TCL_schedular_logs.log',
-    level=logging.INFO,
+    level=logging.DEBUG,
     datefmt="%y-%m-%d %H:%M:%S %p",
     format="%(asctime)s %(name)-15s %(levelname)-8s %(message)s",
     handlers=[
         TCL_handler
     ]
 )
+logger = logging.getLogger('''"TCL_Schedule"''')
 
-purchase_obj = CorePurchaseaddon.objects.using('rds_aws').filter(is_transfer=False).values('iccid', 'expirationdate')
+purchase_obj = CorePurchaseaddon.objects.using('rds_aws').filter(is_transfer=False).order_by('-created_on').values('iccid', 'expirationdate','created_on')
 
 for i in purchase_obj:
-    sim_exp_date = None # i.get("expirationdate", None)
+    sim_exp_date = i.get("expirationdate", None)
     iccid = i.get("iccid", None)
     try:
         if not sim_exp_date:
-            
-            # logging.info(f"{timestamp} - sim_exp_date field value is not available for this {iccid}")
-            logging.info(f"sim_exp_date field value is not available for this {iccid}")
+            logger.info(f"| {iccid} - sim_exp_date field value is not available")
             continue
 
         pass
