@@ -39,12 +39,11 @@ logging.basicConfig(
 
 tcl_logger = logging.getLogger('''"TCL_Schedule"''')
 
-purchase_obj = CorePurchaseaddon.objects.using('rds_aws').filter(is_transfer=False).order_by('-created_on').values(
-    'iccid', 'expirationdate', 'created_on')
+purchase_obj = CorePurchaseaddon.objects.using('rds_aws').filter(is_transfer=False).order_by('-created_on')
 
 for i in purchase_obj:
-    sim_exp_date = i.get("expirationdate", None)
-    iccid = i.get("iccid", None)
+    sim_exp_date = i.expirationdate
+    iccid = i.iccid
     try:
         if not sim_exp_date:
             tcl_logger.info(f"| {iccid} - sim_exp_date field value is not available")
@@ -55,6 +54,9 @@ for i in purchase_obj:
             ).update(sim_exp_date=sim_exp_date)
         except Exception as e:
             tcl_logger.error(f"| {iccid} - {e}")
+        else:
+            i.is_transfer = True
+            i.save()
     except Exception as e:
         tcl_logger.error(f"| {iccid} - {e}")
 
