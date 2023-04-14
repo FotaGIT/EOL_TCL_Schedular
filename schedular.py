@@ -1,11 +1,7 @@
 """
 TCU = scheduler
 """
-import logging
-import datetime
-import json
 import os
-from datetime import date
 
 from django.core.wsgi import get_wsgi_application
 
@@ -14,37 +10,50 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "EOL_TCL_Schedular.settings")
 application = get_wsgi_application()
 # ------------------------------- strat from here ---------------------------------
 
-from tcl_chedular.models import CorePurchaseaddon, EolCertClientTelematics
-from pytz import timezone
+import logging
+import datetime
+import json
+from datetime import date
 
-logging.basicConfig(filename='TCL_schedular_logs.log', level=logging.INFO)
+from tcl_chedular.models import CorePurchaseaddon, EolCertClientTelematics
+from logging.handlers import RotatingFileHandler
+from pytz import timezone
+import logging.handlers
+
+
+TCL_handler = RotatingFileHandler('TCL_schedular_logs.log', mode='a', maxBytes=5 * 1024 * 1024, backupCount=2, encoding=None, delay=0)
+# TCL_handler.setLevel(logging.INFO)
+
+
 
 timestamp = datetime.datetime.now(timezone("Asia/Kolkata")).strftime('%Y-%m-%d %H:%M:%S %p')
 
-level = 'INFO'
-message = 'This is an example log message.'
-logging.info(f"{timestamp} - {message}")
+logging.basicConfig(
+    # filename='TCL_schedular_logs.log',
+    level=logging.INFO,
+    handlers=[
+        TCL_handler
+    ]
+)
 
-purchase_obj = CorePurchaseaddon.objects.using('rds_aws').filter(is_transfer=False).values('iccid','expirationdate')
-
+purchase_obj = CorePurchaseaddon.objects.using('rds_aws').filter(is_transfer=False).values('iccid', 'expirationdate')
 
 for i in purchase_obj:
-    sim_exp_date = i.get("expirationdate")
-    iccid = i.get("iccid")
-    
-    if not sim_exp_date:
-        logging.info(f"{timestamp} - sim_exp_date field value is not available for this {iccid}")
-        continue
+    sim_exp_date = i.get("expirationdate", None)
+    iccid = i.get("iccid", None)
     try:
-        EolCertClientTelematics.objects.filter(
-            iccid=iccid
-        ).update(sim_exp_date=sim_exp_date)
+        if not sim_exp_date:
+            logging.info(f"{timestamp} - sim_exp_date field value is not available for this {iccid}")
+            continue
 
- 
-    except Exception as e:
-        print(e)
         pass
-    
+        # EolCertClientTelematics.objects.filter(
+        #     iccid=iccid
+        # ).update(sim_exp_date=sim_exp_date)
+    except Exception as e:
+        logging.error(f"{timestamp} - {e}")
+        print(e)
+
 # k = {
 #     'modified_on': datetime.datetime(2022, 6, 21, 7, 5, 44, 16552, tzinfo=datetime.timezone.utc),
 #     'iccid': '893107061604825000',
