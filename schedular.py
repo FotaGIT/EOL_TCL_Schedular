@@ -45,10 +45,11 @@ purchase_obj = CorePurchaseaddon.objects.using('rds_aws').filter(is_transfer=Fal
 
 for i in purchase_obj:
     sim_exp_date = parse_datetime(i.expirationdate).date()
+    # sim_exp_date = None
     iccid = i.iccid
     try:
         if not isinstance(sim_exp_date, datetime.date):
-            tcl_logger.info(f"| {iccid} - sim_exp_date field value is not available\n" + '-' * 100)
+            tcl_logger.info(f"| {iccid} - sim_exp_date field value is not available")
             continue
 
         try:
