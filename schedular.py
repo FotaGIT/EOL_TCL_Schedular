@@ -22,8 +22,8 @@ application = get_wsgi_application()
 import datetime
 import logging
 import logging.handlers
-
-from tcl_chedular.models import CorePurchaseaddon, EolCertClientTelematics
+import traceback
+from tcl_chedular.models import CorePurchaseaddon, EolCertClientTelematics, TCL_Exception_Log
 from logging.handlers import RotatingFileHandler
 from django.utils.dateparse import parse_datetime
 
@@ -55,10 +55,15 @@ for i in purchase_obj:
         try:
             EolCertClientTelematics.objects.filter(iccid=iccid).update(sim_exp_date=sim_exp_date)
         except Exception as e:
-            tcl_logger.error(f"| {iccid} - {e}")
+            error_msg_for_log = f"| {iccid} - {e}"
+            TCL_Exception_Log.objects.create(iccid=iccid, error=traceback.format_exc(), one_liner=error_msg_for_log)
+            tcl_logger.error(error_msg_for_log)
         else:
             i.is_transfer = True
             i.save()
 
     except Exception as e:
-        tcl_logger.error(f"| {iccid} - {e}\n" + '-' * 100, exc_info=True)
+        error_msg_for_log = f"| {iccid} - {e}\n" + '-' * 100
+        TCL_Exception_Log.objects.create(iccid=iccid, error=traceback.format_exc(), one_liner=error_msg_for_log)
+        tcl_logger.error(error_msg_for_log, exc_info=True)
+

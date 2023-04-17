@@ -25,6 +25,16 @@ class CorePurchaseaddon(models.Model):
         managed = False
         db_table = 'core_purchaseaddon'
 
+
+class TCL_Exception_Log(models.Model):
+    created_on = models.DateTimeField(auto_now_add=True)
+    iccid = models.CharField(max_length=100, null=True, blank=True)
+    error = models.TextField(blank=True, null=True)
+    one_liner = models.CharField(max_length=500, null=True, blank=True)
+    
+    class Meta:
+        db_table = 'TCL_Exception_Log'
+        
 class EolCertClientTelematics(models.Model):
     id                             = models.BigAutoField(db_column='ID')  # Field name made lowercase.
     serial_no                      = models.CharField(db_column='SERIAL_NO', primary_key=True, max_length=50)  # Field name made lowercase.
