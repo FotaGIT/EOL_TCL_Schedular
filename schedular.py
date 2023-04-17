@@ -20,12 +20,13 @@ application = get_wsgi_application()
 # ------------------------------- start from here -------------------------------
 
 import datetime
-import logging
 import logging.handlers
 import traceback
+
 from tcl_chedular.models import CorePurchaseaddon, EolCertClientTelematics, TCL_Exception_Log
 from logging.handlers import RotatingFileHandler
 from django.utils.dateparse import parse_datetime
+
 
 TCL_handler = RotatingFileHandler('TCL_schedular_logs.log', mode='a', maxBytes=5 * 1024 * 1024, backupCount=2, encoding=None, delay=0)
 
@@ -41,29 +42,34 @@ logging.basicConfig(
 
 tcl_logger = logging.getLogger('''"TCL_Schedule"''')
 
-purchase_obj = CorePurchaseaddon.objects.using('rds_aws').filter(is_transfer=False).order_by('-created_on')
+try:
+    purchase_obj = CorePurchaseaddon.objects.using('rds_aws').filter(is_transfer=False).order_by('-created_on')
 
-for i in purchase_obj:
-    sim_exp_date = parse_datetime(i.expirationdate).date()
-    # sim_exp_date = None
-    iccid = i.iccid
-    try:
-        if not isinstance(sim_exp_date, datetime.date):
-            tcl_logger.info(f"| {iccid} - sim_exp_date field value is not available")
-            continue
-
+    for i in purchase_obj:
+        sim_exp_date = parse_datetime(i.expirationdate).date()
+        # sim_exp_date = None
+        iccid = i.iccid
         try:
-            EolCertClientTelematics.objects.filter(iccid=iccid).update(sim_exp_date=sim_exp_date)
+            if not isinstance(sim_exp_date, datetime.date):
+                tcl_logger.info(f"| {iccid} - sim_exp_date field value is not available")
+                continue
+
+            try:
+                EolCertClientTelematics.objects.filter(iccid=iccid).update(sim_exp_date=sim_exp_date)
+            except Exception as e:
+                error_msg_for_log = f"| {iccid} - {e}"
+                TCL_Exception_Log.objects.create(iccid=iccid, error=traceback.format_exc(), one_liner=error_msg_for_log)
+                tcl_logger.error(error_msg_for_log)
+            else:
+                i.is_transfer = True
+                i.save()
+
         except Exception as e:
-            error_msg_for_log = f"| {iccid} - {e}"
+            error_msg_for_log = f"| {iccid} - {e}\n" + '-' * 100
             TCL_Exception_Log.objects.create(iccid=iccid, error=traceback.format_exc(), one_liner=error_msg_for_log)
-            tcl_logger.error(error_msg_for_log)
-        else:
-            i.is_transfer = True
-            i.save()
+            tcl_logger.error(error_msg_for_log, exc_info=True)
 
-    except Exception as e:
-        error_msg_for_log = f"| {iccid} - {e}\n" + '-' * 100
-        TCL_Exception_Log.objects.create(iccid=iccid, error=traceback.format_exc(), one_liner=error_msg_for_log)
-        tcl_logger.error(error_msg_for_log, exc_info=True)
-
+except Exception as e:
+    error_msg_for_log = f"| {e}\n" + '-' * 100
+    TCL_Exception_Log.objects.create(error=traceback.format_exc(), one_liner=error_msg_for_log)
+    tcl_logger.error(error_msg_for_log, exc_info=True)
