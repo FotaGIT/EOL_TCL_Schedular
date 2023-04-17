@@ -55,7 +55,11 @@ try:
                 continue
 
             try:
-                EolCertClientTelematics.objects.filter(iccid=iccid).update(sim_exp_date=sim_exp_date)
+                objects_filter = EolCertClientTelematics.objects.filter(iccid=iccid)
+                if not objects_filter.exists():
+                    continue
+                objects_filter.update(sim_exp_date=sim_exp_date)
+                print(iccid, 'fiend is updated successfully')
             except Exception as e:
                 error_msg_for_log = f"| {iccid} - {e}"
                 TCL_Exception_Log.objects.create(iccid=iccid, error=traceback.format_exc(), one_liner=error_msg_for_log)
