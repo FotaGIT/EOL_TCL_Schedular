@@ -50,7 +50,9 @@ try:
         iccid = i.iccid
         try:
             if not isinstance(sim_exp_date, datetime.date):
-                tcl_logger.info(f"| {iccid} - sim_exp_date field value is not available")
+                error_msg_for_log = f"| {iccid} - sim_exp_date field value is not available"
+                TCL_Exception_Log.objects.create(iccid=iccid, error=traceback.format_exc(), one_liner=error_msg_for_log)
+                tcl_logger.info(error_msg_for_log)
                 continue
 
             try:
