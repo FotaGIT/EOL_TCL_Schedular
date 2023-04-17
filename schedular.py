@@ -47,7 +47,6 @@ try:
 
     for i in purchase_obj:
         sim_exp_date = parse_datetime(i.expirationdate).date()
-        # sim_exp_date = None
         iccid = i.iccid
         try:
             if not isinstance(sim_exp_date, datetime.date):
